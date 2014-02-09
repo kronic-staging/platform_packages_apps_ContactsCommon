@@ -63,12 +63,17 @@ public class SelectAccountActivity extends Activity {
         final List<AccountWithDataSet> accountList = accountTypes.getAccounts(true,
                 AccountTypeManager.FLAG_ALL_ACCOUNTS_WITHOUT_SIM);
         if (accountList.size() == 0) {
-            Log.w(LOG_TAG, "Select local storage account");
+            Log.w(LOG_TAG, "Select phone-local storage account");
             finish();
             return;
         }
 
         Log.i(LOG_TAG, "The number of available accounts: " + accountList.size());
+
+        // Add a virtual local storage account to allow user to store its contacts in the phone
+        AccountWithDataSet localAccount = new AccountWithDataSet(
+                getString(R.string.local_storage_account), AccountType.LOCAL_ACCOUNT, null);
+        accountList.add(0, localAccount);
 
         // Multiple accounts. Let users to select one.
         mAccountSelectionListener =
@@ -77,12 +82,15 @@ public class SelectAccountActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        final AccountWithDataSet account = mAccountList.get(which);
-                        final Intent intent = new Intent();
-                        intent.putExtra(ACCOUNT_NAME, account.name);
-                        intent.putExtra(ACCOUNT_TYPE, account.type);
-                        intent.putExtra(DATA_SET, account.dataSet);
-                        setResult(RESULT_OK, intent);
+                        // Position 0 contains the phone-local account
+                        if (which > 0) {
+                            final AccountWithDataSet account = mAccountList.get(which);
+                            final Intent intent = new Intent();
+                            intent.putExtra(ACCOUNT_NAME, account.name);
+                            intent.putExtra(ACCOUNT_TYPE, account.type);
+                            intent.putExtra(DATA_SET, account.dataSet);
+                            setResult(RESULT_OK, intent);
+                        }
                         finish();
                     }
                 };
